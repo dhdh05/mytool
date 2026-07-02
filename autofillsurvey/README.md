@@ -50,8 +50,8 @@ Trước hết, bạn cần cài đặt một extension quản lý userscript tr
 ## 🛠️ Hướng dẫn sử dụng chi tiết
 
 Khi bạn truy cập vào các trang khảo sát có liên kết dạng:
-- `https://ctt-sis.hust.edu.vn/Surveys/...`
-- `https://ctt-daotao.hust.edu.vn/Surveys/...`
+- `https://ctt-sis.hxxx.edu.vn/Surveys/...`
+- `https://ctt-daotao.hxxx.edu.vn/Surveys/...`
 
 Bạn sẽ thấy một bảng điều khiển nổi xuất hiện ở góc dưới bên phải màn hình:
 
