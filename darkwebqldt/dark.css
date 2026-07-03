@@ -1,0 +1,1287 @@
+/*******************************************************************************
+ * BKHN DarkMode - Custom Dark Theme for HUST QLDT (qldt.hust.edu.vn)
+ * Handcrafted to override Bootstrap, GWT, Select2, DataTables, and Calendars.
+ ******************************************************************************/
+
+/* ==========================================================================
+   1. VARIABLES
+   ========================================================================== */
+:root {
+    --bg: #181818;
+    --surface: #202020;
+    --card: #252526;
+    --hover: #2d2d30;
+    --border: #3d3d3d;
+    --text: #ECECEC;
+    --text-secondary: #BDBDBD;
+    --link: #64B5FF;
+    --danger: #EF5350;
+    --warning: #FFCA28;
+    --success: #66BB6A;
+
+    /* System specific branding shadows & colors */
+    --hust-red: #AA1D2B;
+    --shadow: rgba(0, 0, 0, 0.4) 0px 4px 12px;
+}
+
+/* ==========================================================================
+   2. RESET
+   ========================================================================== */
+html,
+body {
+    background-color: var(--bg) !important;
+    color: var(--text) !important;
+    scroll-behavior: smooth !important;
+}
+
+/* Override GWT default text and background wrapping */
+#main,
+.main-panel,
+.wrapper,
+.container,
+.container-fluid,
+.content-wrapper {
+    background-color: var(--bg) !important;
+    color: var(--text) !important;
+}
+
+/* Global focus state override for accessibility */
+*:focus {
+    outline: none !important;
+}
+
+/* Fix default browser borders and divider rules */
+hr {
+    border-top: 1px solid var(--border) !important;
+    background: transparent !important;
+}
+
+/* ==========================================================================
+   3. TYPOGRAPHY
+   ========================================================================== */
+body,
+p,
+span,
+td,
+th,
+li,
+a,
+label,
+input,
+select,
+textarea,
+button {
+    font-family: 'SVN-Poppins', 'Roboto Condensed', 'Helvetica Neue', Arial, sans-serif !important;
+    color: var(--text);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.h1,
+.h2,
+.h3,
+.h4,
+.h5,
+.h6 {
+    color: var(--text) !important;
+    font-weight: 600 !important;
+}
+
+small,
+.small,
+.text-muted,
+.help-block,
+.info-text {
+    color: var(--text-secondary) !important;
+}
+
+a {
+    color: var(--link) !important;
+    transition: color 0.2s ease-in-out;
+    text-decoration: none !important;
+}
+
+a:hover,
+a:focus {
+    color: #9cd1ff !important;
+    text-decoration: underline !important;
+}
+
+/* Keep university brand texts colored properly */
+.navbar-brand,
+.brand-logo-text {
+    color: #ffffff !important;
+}
+
+/* ==========================================================================
+   4. LAYOUT
+   ========================================================================== */
+.main-content,
+#main,
+.main-panel,
+.wrapper,
+.container,
+.container-fluid,
+.content-wrapper {
+    background-color: var(--bg) !important;
+    background: var(--bg) !important;
+    color: var(--text) !important;
+}
+
+.content-box,
+.box-container,
+.main-layout-wrapper {
+    background-color: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 6px !important;
+    box-shadow: var(--shadow) !important;
+}
+
+/* Vertical panels and layout structures */
+.verticalPanelBox,
+.basicPanel {
+    background-color: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 4px;
+    padding: 10px;
+    margin: 10px 0;
+}
+
+/* Generic container cards, boxes, and GWT wrappers */
+.well,
+.jumbotron,
+.bg-white,
+.white-bg,
+.instruction-panel,
+.teacher-service-panel,
+.home-company-panel,
+.item-student-service-block-2>div,
+.item-activities-admission .description-activities,
+.item-step-admission,
+.contact-item.has-bg-color,
+.tab-panel-employ,
+.scientific-research,
+.col-persional-inf,
+.imagesPanel,
+.personal-info-panel,
+.student-info,
+.student-info-box,
+.student-profile,
+.profile-info,
+.info-container,
+.gwt-TabLayoutPanelContent,
+.gwt-TabLayoutPanel,
+.gwt-PopupPanel,
+.gwt-DialogBox,
+.gwt-DecoratorPanel {
+    background-color: var(--card) !important;
+    background: var(--card) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border) !important;
+}
+
+/* Ensure child text elements are contrasted correctly */
+.instruction-panel *,
+.well *,
+.gwt-TabLayoutPanelContent *,
+.gwt-TabLayoutPanel *,
+.gwt-PopupPanel *,
+.gwt-DialogBox * {
+    color: var(--text) !important;
+}
+
+.instruction-panel a,
+.well a,
+.gwt-TabLayoutPanelContent a,
+.gwt-TabLayoutPanel a,
+.gwt-PopupPanel a,
+.gwt-DialogBox a {
+    color: var(--link) !important;
+}
+
+/* Page footers */
+.footer,
+.wraper-footer-panel,
+.inf-footer,
+.contact-info-footer,
+.footer-hmu-panel,
+.footerPanel,
+.sub-footer,
+.footer-forms-panel,
+.footer-forms-hvmm,
+.sub-footer-forms,
+.hideFooterHust,
+.hideFooterMyCourse {
+    background: var(--surface) !important;
+    background-color: var(--surface) !important;
+    color: var(--text) !important;
+    border-top: 1px solid var(--border) !important;
+}
+
+.footer *,
+.wraper-footer-panel *,
+.inf-footer *,
+.contact-info-footer *,
+.footer-hmu-panel *,
+.footerPanel *,
+.sub-footer *,
+.footer-forms-panel *,
+.footer-forms-hvmm *,
+.sub-footer-forms *,
+.hideFooterHust *,
+.hideFooterMyCourse * {
+    background-color: transparent !important;
+    color: var(--text) !important;
+}
+
+.footer a,
+.wraper-footer-panel a,
+.inf-footer a,
+.contact-info-footer a,
+.footer-hmu-panel a,
+.footerPanel a,
+.sub-footer a,
+.footer-forms-panel a,
+.footer-forms-hvmm a,
+.sub-footer-forms a,
+.hideFooterHust a,
+.hideFooterMyCourse a {
+    color: var(--link) !important;
+}
+
+/* ==========================================================================
+   5. NAVBAR
+   ========================================================================== */
+/* The main red navigation bar stays red to maintain school brand identity */
+.navbar,
+.navbar-default {
+    background-color: var(--hust-red) !important;
+    border-bottom: 2px solid #85121b !important;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3) !important;
+}
+
+.navbar .navbar-nav>li>a {
+    color: #ffffff !important;
+}
+
+.navbar .navbar-nav>li>a:hover,
+.navbar .navbar-nav>li>a:focus {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* The second header panel (white in light mode) must be dark */
+.second-header-panel,
+.second-header-panel div,
+.second-header-panel td,
+.second-header-panel tr,
+.second-header-panel table,
+.second-header-panel .container,
+.second-header-panel .navbar-collapse,
+.second-header-panel .navbar-nav {
+    background: var(--surface) !important;
+    background-color: var(--surface) !important;
+    color: var(--text) !important;
+    border-bottom-color: var(--border) !important;
+}
+
+.second-header-panel.header-new-page {
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4) !important;
+}
+
+.newBackgroundHeader .second-header-panel {
+    background: var(--surface) !important;
+}
+
+/* Buttons and menus inside the second header panel */
+.second-header-panel .navbar-nav-header-panel>li>button,
+.newBackgroundHeader .second-header-panel .navbar-nav-header-panel>li>button {
+    color: var(--text) !important;
+    background: transparent !important;
+    border: none !important;
+}
+
+.second-header-panel .navbar-nav-header-panel>li>button:hover,
+.second-header-panel .navbar-nav-header-panel>li>button.ACTIVE,
+.newBackgroundHeader .second-header-panel .navbar-nav-header-panel>li>button:hover,
+.newBackgroundHeader .second-header-panel .navbar-nav-header-panel>li>button.ACTIVE {
+    color: #ffffff !important;
+    background-color: var(--hust-red) !important;
+    border-radius: 4px;
+}
+
+/* User login button in header */
+.newBackgroundHeader .btn-login-main-style {
+    background: transparent !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text) !important;
+}
+
+.newBackgroundHeader .btn-login-main-style:hover {
+    background: var(--hover) !important;
+    color: #ffffff !important;
+}
+
+/* Search box in header */
+.search-box-main-style {
+    background-color: var(--card) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text) !important;
+    border-radius: 4px;
+}
+
+.btn-search-main-style {
+    background: var(--hust-red) !important;
+    color: white !important;
+    border-radius: 4px;
+}
+
+/* ==========================================================================
+   6. SIDEBAR
+   ========================================================================== */
+.left-menu-annouce,
+.sidebar-wrapper {
+    background-color: var(--surface) !important;
+    border-right: 1px solid var(--border) !important;
+}
+
+/* Sidebar Custom Menu Options (GWT layout widgets) */
+.submenu-custom {
+    background-color: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+}
+
+.submenu-custom ul {
+    background-color: var(--card) !important;
+    border: 1px solid var(--border) !important;
+    padding: 5px 0 !important;
+}
+
+.submenu-custom ul li button {
+    background-color: transparent !important;
+    color: var(--text) !important;
+    border: none !important;
+    text-align: left !important;
+    padding: 8px 15px !important;
+    width: 100%;
+}
+
+.submenu-custom ul li button:hover {
+    background-color: var(--hover) !important;
+    color: var(--link) !important;
+}
+
+.submenu-custom .textProcess {
+    color: var(--text) !important;
+}
+
+.submenu-external {
+    background-color: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+}
+
+/* ==========================================================================
+   7. CARDS
+   ========================================================================== */
+/* Override Bootstrap Panels as cards */
+.panel {
+    background-color: var(--card) !important;
+    border: 1px solid var(--border) !important;
+    box-shadow: var(--shadow) !important;
+    margin-bottom: 20px;
+}
+
+.panel-default>.panel-heading {
+    background-color: var(--surface) !important;
+    border-bottom: 1px solid var(--border) !important;
+    color: var(--text) !important;
+    font-weight: bold !important;
+}
+
+.panel-body {
+    background-color: var(--card) !important;
+    color: var(--text) !important;
+}
+
+.panel-footer {
+    background-color: var(--surface) !important;
+    border-top: 1px solid var(--border) !important;
+}
+
+/* Custom dashboard cards */
+.card-dashboard,
+.stat-card {
+    background-color: var(--card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 6px;
+    padding: 15px;
+}
+
+/* ==========================================================================
+   8. TABLES
+   ========================================================================== */
+table,
+.table,
+.table-bordered,
+.cw-FlexTable,
+.lecture-schedule table {
+    background-color: var(--card) !important;
+    background: var(--card) !important;
+    border-color: var(--border) !important;
+    width: 100% !important;
+}
+
+table tr,
+.table tr,
+.cw-FlexTable tr,
+.lecture-schedule table tr {
+    background-color: var(--card) !important;
+    background: var(--card) !important;
+}
+
+table th,
+.table th,
+.cw-FlexTable th,
+.table>thead>tr>th,
+.table>tbody>tr>th,
+.table>tfoot>tr>th,
+.lecture-schedule table th,
+.tableHeader,
+.tableHeader2,
+.tableReview th {
+    background-color: var(--surface) !important;
+    background: var(--surface) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border) !important;
+    font-weight: 600 !important;
+}
+
+table td,
+.table td,
+.table>thead>tr>td,
+.table>tbody>tr>td,
+.table>tfoot>tr>td,
+.cw-FlexTable td,
+.lecture-schedule table td,
+.each_class_schedule tr td,
+.tableReview td {
+    background-color: var(--card) !important;
+    background: var(--card) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border) !important;
+    padding: 8px !important;
+}
+
+/* Ensure links inside table cells match the link theme color */
+table td a,
+.cw-FlexTable td a,
+.lecture-schedule table td a {
+    color: var(--link) !important;
+}
+
+table td a:hover,
+.cw-FlexTable td a:hover,
+.lecture-schedule table td a:hover {
+    color: #9cd1ff !important;
+}
+
+/* Striped rows override */
+.table-striped>tbody>tr:nth-of-type(odd),
+.cw-FlexTable tr:nth-child(odd) td,
+table tr:nth-child(odd),
+table tr:nth-child(odd) td,
+.lecture-schedule table tr:nth-child(odd),
+.lecture-schedule table tr:nth-child(odd) td {
+    background-color: var(--surface) !important;
+    background: var(--surface) !important;
+}
+
+/* Hover effect */
+.table-hover>tbody>tr:hover,
+.table-hover>tbody>tr:hover>td,
+.cw-FlexTable tr:hover td,
+table tr:hover,
+table tr:hover td,
+.lecture-schedule table tr:hover,
+.lecture-schedule table tr:hover td {
+    background-color: var(--hover) !important;
+    background: var(--hover) !important;
+}
+
+/* Review layout tables */
+.tableReview {
+    background-color: var(--card) !important;
+    border: 1px solid var(--border) !important;
+}
+
+/* Active elements inside lists */
+.table>tbody>tr.active>td,
+.table>tbody>tr.active>th,
+table tr.active td,
+table tr.active th {
+    background-color: var(--hover) !important;
+    background: var(--hover) !important;
+    color: #ffffff !important;
+}
+
+/* ==========================================================================
+   9. INPUTS
+   ========================================================================== */
+.form-control,
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="number"],
+input[type="search"],
+textarea,
+select {
+    background-color: var(--surface) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 4px !important;
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.2) !important;
+    transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out !important;
+    height: 34px;
+    padding: 6px 12px;
+}
+
+/* Textareas specific styling */
+textarea.form-control,
+textarea {
+    height: auto !important;
+    min-height: 80px;
+}
+
+/* Placeholders color customization */
+::placeholder,
+::-webkit-input-placeholder,
+:-ms-input-placeholder,
+::-moz-placeholder {
+    color: var(--text-secondary) !important;
+    opacity: 0.7 !important;
+    font-style: italic !important;
+}
+
+/* Focus and active input states */
+.form-control:focus,
+input[type="text"]:focus,
+input[type="password"]:focus,
+textarea:focus,
+select:focus {
+    border-color: var(--link) !important;
+    box-shadow: 0 0 8px rgba(100, 181, 255, 0.4) !important;
+    background-color: var(--surface) !important;
+    color: #ffffff !important;
+}
+
+/* Disabled inputs */
+.form-control[disabled],
+.form-control[readonly],
+input[disabled],
+select[disabled],
+textarea[disabled] {
+    background-color: var(--bg) !important;
+    border-color: var(--border) !important;
+    color: var(--text-secondary) !important;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Custom HUST Input Classes */
+.input-primary {
+    background-color: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 5px !important;
+}
+
+.input-primary input,
+.input-primary textarea {
+    background-color: transparent !important;
+    color: var(--text) !important;
+}
+
+.input-leftMenu,
+.input-leftMenu input {
+    background: var(--surface) !important;
+    border-color: var(--border) !important;
+    color: var(--text) !important;
+}
+
+/* ==========================================================================
+   10. BUTTONS
+   ========================================================================== */
+.btn {
+    font-weight: 500 !important;
+    border-radius: 4px !important;
+    transition: all 0.2s ease !important;
+    padding: 6px 12px !important;
+}
+
+/* Default buttons */
+.btn-default {
+    background-color: var(--hover) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border) !important;
+}
+
+.btn-default:hover,
+.btn-default:focus,
+.btn-default:active,
+.btn-default.active {
+    background-color: var(--border) !important;
+    color: #ffffff !important;
+    border-color: var(--border) !important;
+}
+
+/* Primary buttons */
+.btn-primary,
+.button-primary {
+    background-color: var(--hust-red) !important;
+    color: #ffffff !important;
+    border: 1px solid var(--hust-red) !important;
+    box-shadow: none !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active,
+.btn-primary.active,
+.button-primary:hover,
+.button-primary:active {
+    background-color: #85121b !important;
+    border-color: #85121b !important;
+    color: #ffffff !important;
+}
+
+/* Secondary / flat buttons */
+.buttonFlat {
+    color: var(--link) !important;
+    background: transparent !important;
+}
+
+.buttonFlat:hover {
+    color: #9cd1ff !important;
+    background: var(--hover) !important;
+}
+
+.buttonFlat:active {
+    color: #ffffff !important;
+    background: var(--hust-red) !important;
+}
+
+/* Success, Danger, Info Buttons overrides */
+.btn-success {
+    background-color: var(--success) !important;
+    border-color: var(--success) !important;
+    color: #121212 !important;
+    font-weight: bold !important;
+}
+
+.btn-success:hover {
+    background-color: #55a359 !important;
+    border-color: #55a359 !important;
+}
+
+.btn-danger,
+.closebutton {
+    background-color: var(--danger) !important;
+    border-color: var(--danger) !important;
+    color: #ffffff !important;
+}
+
+.btn-danger:hover,
+.closebutton:hover {
+    background-color: #d33c39 !important;
+    border-color: #d33c39 !important;
+}
+
+.btn-warning {
+    background-color: var(--warning) !important;
+    border-color: var(--warning) !important;
+    color: #121212 !important;
+    font-weight: bold !important;
+}
+
+.btn-warning:hover {
+    background-color: #e5b31c !important;
+}
+
+/* ==========================================================================
+   11. DROPDOWN
+   ========================================================================== */
+.dropdown-menu,
+.dropdown-menu-mobile,
+.bootstrap-select .dropdown-menu,
+.dropdown.dropdown-hover .dropdown-menu {
+    background-color: var(--card) !important;
+    background: var(--card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 4px !important;
+    box-shadow: var(--shadow) !important;
+    padding: 5px 0 !important;
+}
+
+.dropdown-menu>li>a,
+.dropdown.dropdown-hover .dropdown-menu li a,
+.dropdown.dropdown-hover .dropdown-menu li span {
+    color: var(--text) !important;
+    padding: 8px 20px !important;
+    background-color: transparent !important;
+    background: transparent !important;
+    display: block;
+}
+
+.dropdown-menu>li>a:hover,
+.dropdown-menu>li>a:focus,
+.dropdown-menu>.active>a,
+.dropdown-menu>.active>a:hover,
+.dropdown.dropdown-hover .dropdown-menu li a:hover,
+.dropdown.dropdown-hover .dropdown-menu li a:focus {
+    background-color: var(--hover) !important;
+    background: var(--hover) !important;
+    color: var(--link) !important;
+}
+
+/* Dropdown divider rule */
+.dropdown-menu .divider {
+    background-color: var(--border) !important;
+}
+
+/* Dropdown menu items configured as raw buttons */
+.dropdown-menu button {
+    background-color: transparent !important;
+    color: var(--text) !important;
+    border: none !important;
+    width: 100%;
+    text-align: left;
+    padding: 8px 20px;
+}
+
+.dropdown-menu button:hover,
+.dropdown-menu button.ACTIVE {
+    background-color: var(--hover) !important;
+    color: var(--link) !important;
+}
+
+/* ==========================================================================
+   12. MODAL
+   ========================================================================== */
+.modal-content,
+.dialogCustomPanel .modal-content,
+.dialogChooseStudentPanel .modal-content,
+.is-show-lecture-panel .modal-content {
+    background-color: var(--card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 6px !important;
+    box-shadow: var(--shadow) !important;
+    color: var(--text) !important;
+}
+
+.modal-header,
+.dialogCustomPanel .modal-header,
+.dialogChooseStudentPanel .modal-header,
+.customDialogAdmission .modal-header,
+.dialog-my-calendar .modal-header,
+.dialog-law-panel .modal-header,
+.dialog-info-system .modal-header {
+    background-color: var(--surface) !important;
+    border-bottom: 1px solid var(--border) !important;
+    padding: 15px !important;
+}
+
+.modal-header .modal-title,
+.modal-header .gwt-HTML,
+.modal-header .gwt-HTML b,
+.admission-code-popup .modal-header .gwt-HTML b {
+    color: var(--text) !important;
+    font-size: 16px !important;
+}
+
+.modal-body,
+.dialogChooseStudentPanel .modal-body,
+.is-show-lecture-panel .modal-body {
+    background-color: var(--card) !important;
+    color: var(--text) !important;
+    padding: 20px !important;
+}
+
+.modal-footer,
+.dialogChooseStudentPanel .modal-footer {
+    background-color: var(--surface) !important;
+    border-top: 1px solid var(--border) !important;
+    padding: 15px !important;
+}
+
+/* Modal overlays background */
+.modal-backdrop,
+.modal-backdrop.in {
+    background-color: #000000 !important;
+    opacity: 0.65 !important;
+}
+
+/* ==========================================================================
+   13. NOTIFICATION
+   ========================================================================== */
+/* Standard alert boxes styling */
+.alert {
+    border-radius: 4px !important;
+    border: 1px solid transparent !important;
+}
+
+.alert-success {
+    background-color: rgba(102, 187, 106, 0.15) !important;
+    border-color: var(--success) !important;
+    color: var(--success) !important;
+}
+
+.alert-info {
+    background-color: rgba(100, 181, 255, 0.15) !important;
+    border-color: var(--link) !important;
+    color: var(--link) !important;
+}
+
+.alert-warning {
+    background-color: rgba(255, 202, 40, 0.15) !important;
+    border-color: var(--warning) !important;
+    color: var(--warning) !important;
+}
+
+.alert-danger {
+    background-color: rgba(239, 83, 80, 0.15) !important;
+    border-color: var(--danger) !important;
+    color: var(--danger) !important;
+}
+
+/* System badges */
+.badge {
+    background-color: var(--hover) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border) !important;
+}
+
+.badge-danger,
+.badge-danger[href] {
+    background-color: var(--danger) !important;
+    color: white !important;
+}
+
+/* ==========================================================================
+   14. DATATABLES
+   ========================================================================== */
+.dataTables_wrapper {
+    background-color: var(--card) !important;
+    padding: 15px !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 4px;
+    color: var(--text) !important;
+}
+
+/* Filter inputs and entries selection */
+.dataTables_filter input {
+    background-color: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text) !important;
+    margin-left: 8px !important;
+    padding: 5px 10px !important;
+    border-radius: 4px !important;
+}
+
+.dataTables_length select {
+    background-color: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text) !important;
+    padding: 5px !important;
+    border-radius: 4px !important;
+}
+
+/* DataTables pagination styling */
+.dataTables_paginate .paginate_button {
+    background-color: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text) !important;
+    border-radius: 4px !important;
+    margin: 0 2px !important;
+}
+
+.dataTables_paginate .paginate_button:hover {
+    background: var(--hover) !important;
+    color: var(--link) !important;
+    border-color: var(--border) !important;
+}
+
+.dataTables_paginate .paginate_button.current,
+.dataTables_paginate .paginate_button.current:hover {
+    background: var(--hust-red) !important;
+    color: #ffffff !important;
+    border-color: var(--hust-red) !important;
+}
+
+.dataTables_info {
+    color: var(--text-secondary) !important;
+}
+
+/* Sort headers indicators override */
+table.dataTable thead th.sorting,
+table.dataTable thead th.sorting_asc,
+table.dataTable thead th.sorting_desc {
+    background-color: var(--surface) !important;
+    color: var(--text) !important;
+}
+
+/* ==========================================================================
+   15. SELECT2
+   ========================================================================== */
+.select2-container--default .select2-selection--single {
+    background-color: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 4px !important;
+    height: 34px !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: var(--text) !important;
+    line-height: 32px !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 32px !important;
+}
+
+/* Select2 dropdown elements */
+.select2-dropdown {
+    background-color: var(--card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 4px !important;
+    box-shadow: var(--shadow) !important;
+}
+
+.select2-search--dropdown .select2-search__field {
+    background-color: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text) !important;
+    border-radius: 4px !important;
+}
+
+.select2-results__option {
+    padding: 8px 12px !important;
+    color: var(--text) !important;
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: var(--hover) !important;
+    color: var(--link) !important;
+}
+
+.select2-container--default .select2-results__option[aria-selected="true"] {
+    background-color: var(--border) !important;
+    color: #ffffff !important;
+}
+
+/* ==========================================================================
+   16. CALENDAR
+   ========================================================================== */
+/* FullCalendar overrides */
+#calendarId,
+.fc {
+    background-color: var(--card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 6px;
+    padding: 15px;
+}
+
+.fc-toolbar {
+    margin-bottom: 15px !important;
+}
+
+.fc-toolbar h2 {
+    color: var(--text) !important;
+    font-size: 20px !important;
+}
+
+.fc-state-default {
+    background-color: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text) !important;
+    text-shadow: none !important;
+    box-shadow: none !important;
+}
+
+.fc-state-hover,
+.fc-state-down,
+.fc-state-active,
+.fc-state-disabled {
+    background-color: var(--hover) !important;
+    color: var(--link) !important;
+}
+
+.fc-day-header {
+    background-color: var(--surface) !important;
+    color: var(--text) !important;
+    padding: 6px !important;
+    border: 1px solid var(--border) !important;
+}
+
+.fc-day,
+.fc-day-top,
+.fc-widget-content {
+    border-color: var(--border) !important;
+}
+
+/* Highlighting today and event cells */
+.fc-today {
+    background-color: rgba(100, 181, 255, 0.1) !important;
+}
+
+.fc-event,
+.fc-event-dot {
+    background-color: var(--hust-red) !important;
+    border: 1px solid var(--hust-red) !important;
+    color: white !important;
+    padding: 2px 4px !important;
+    border-radius: 3px !important;
+}
+
+/* Inline calendars (simple calendar) */
+.simple-calendar {
+    background-color: var(--card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 6px !important;
+    box-shadow: var(--shadow) !important;
+}
+
+.simple-calendar .header {
+    background-color: var(--surface) !important;
+    border-bottom: 1px solid var(--border) !important;
+}
+
+.simple-calendar .day {
+    color: var(--text) !important;
+}
+
+.simple-calendar .day.today {
+    background-color: var(--hust-red) !important;
+    color: white !important;
+}
+
+.simple-calendar .day.event {
+    border-bottom: 3px solid var(--link) !important;
+}
+
+/* Date range picker overlays styling */
+.daterangepicker {
+    background-color: var(--card) !important;
+    border: 1px solid var(--border) !important;
+    box-shadow: var(--shadow) !important;
+    color: var(--text) !important;
+}
+
+.daterangepicker .calendar-table {
+    background-color: var(--card) !important;
+    border: none !important;
+}
+
+.daterangepicker td.available:hover,
+.daterangepicker th.available:hover {
+    background-color: var(--hover) !important;
+}
+
+.daterangepicker td.off,
+.daterangepicker td.off.in-range,
+.daterangepicker td.off.start-date,
+.daterangepicker td.off.end-date {
+    background-color: var(--bg) !important;
+    color: var(--text-secondary) !important;
+}
+
+.daterangepicker td.in-range {
+    background-color: rgba(100, 181, 255, 0.15) !important;
+    color: var(--text) !important;
+}
+
+.daterangepicker td.active,
+.daterangepicker td.active:hover {
+    background-color: var(--hust-red) !important;
+    color: white !important;
+}
+
+/* ==========================================================================
+   17. UTILITIES
+   ========================================================================== */
+.bg-white,
+.white-bg {
+    background-color: var(--surface) !important;
+}
+
+.bg-light,
+.light-bg {
+    background-color: var(--bg) !important;
+}
+
+.border-bottom-gray {
+    border-bottom: 1px solid var(--border) !important;
+}
+
+/* Colored text helpers styled cleanly for dark backgrounds */
+.text-success {
+    color: var(--success) !important;
+}
+
+.text-danger {
+    color: var(--danger) !important;
+}
+
+.text-warning {
+    color: var(--warning) !important;
+}
+
+.text-primary {
+    color: var(--link) !important;
+}
+
+/* ==========================================================================
+   18. SCROLLBAR
+   ========================================================================== */
+::-webkit-scrollbar {
+    width: 10px !important;
+    height: 10px !important;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg) !important;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border) !important;
+    border-radius: 5px !important;
+    border: 2px solid var(--bg) !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--hover) !important;
+}
+
+/* ==========================================================================
+   19. RESPONSIVE
+   ========================================================================== */
+@media (max-width: 768px) {
+    .second-header-panel.is-mobile .dropdown .dropdown-menu {
+        background-color: var(--card) !important;
+    }
+
+    .navbar-collapse {
+        background-color: var(--surface) !important;
+        border-top: 1px solid var(--border) !important;
+    }
+}
+
+/* ==========================================================================
+   20. FIXES
+   ========================================================================== */
+/* Fix elements that inherit raw background settings dynamically */
+.dialog-my-calendar .modal-body table,
+.dialog-my-calendar .modal-body .gwt-HTML {
+    background-color: transparent !important;
+    color: var(--text) !important;
+}
+
+.dateBoxPopup {
+    background-color: var(--card) !important;
+    border: 1px solid var(--border) !important;
+}
+
+/* Progress circle elements */
+.circle-background {
+    stroke: var(--border) !important;
+}
+
+.circle-progress {
+    stroke: var(--link) !important;
+}
+
+.text-progress {
+    color: var(--text) !important;
+}
+
+/* Tooltip dynamic styling popup (FullCalendar tooltip popups) */
+.tooltipevent {
+    background-color: var(--card) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text) !important;
+    box-shadow: var(--shadow) !important;
+    border-radius: 4px;
+    padding: 10px !important;
+}
+
+/* Fix GWT FlexTable actions panel */
+.cw-FlexTable-buttonPanel td {
+    border: none !important;
+    background-color: transparent !important;
+}
+
+/* Fix mobile collapses icons */
+.navbar-toggle .icon-bar {
+    background-color: #ffffff !important;
+}
+
+/* GWT TabBar and TabLayoutPanel Tab overrides */
+.gwt-TabBar,
+.gwt-TabLayoutPanel,
+.gwt-TabPanel {
+    background-color: var(--surface) !important;
+    border-bottom: 1px solid var(--border) !important;
+}
+
+.gwt-TabBarItem,
+.gwt-TabLayoutPanelTab,
+.gwt-TabPanelBottom {
+    background-color: var(--card) !important;
+    color: var(--text-secondary) !important;
+    border: 1px solid var(--border) !important;
+    border-bottom: none !important;
+    padding: 8px 16px !important;
+    cursor: pointer !important;
+    border-radius: 4px 4px 0 0 !important;
+}
+
+.gwt-TabBarItem-selected,
+.gwt-TabLayoutPanelTab-selected,
+.gwt-TabBarItem:hover,
+.gwt-TabLayoutPanelTab:hover {
+    background-color: var(--hover) !important;
+    color: var(--text) !important;
+    border-bottom: 2px solid var(--hust-red) !important;
+}
+
+/* Custom steps bar alignment on registration */
+.step,
+.step-title,
+.images-step,
+.step-manual,
+.step-manual li,
+.step-manual li div {
+    background-color: var(--card) !important;
+    color: var(--text) !important;
+}
+
+.step-title {
+    color: var(--link) !important;
+}
+
+.step-manual li div:first-child {
+    background-color: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text) !important;
+}
+
+/* Fix generic loading panels and empty tables background */
+.loading,
+.loading-panel,
+.loading-indicator,
+.gwt-HTML[style*="background-color: white"],
+.gwt-Label[style*="background-color: white"] {
+    background-color: var(--bg) !important;
+    color: var(--text) !important;
+}

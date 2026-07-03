@@ -1,0 +1,76 @@
+.buttonEditContent {
+	float: right;
+}
+
+.suggestBoxSearch {
+	margin-left: 30%;
+	margin-top: 20px;
+	margin-right: 30%;
+}
+
+.tableReview {
+	text-align: left;
+	width: 100%;
+}
+
+.tableReview td {
+	padding: 5px;
+}
+
+.verticalPanelBox {
+	margin: 10px 0px 0px 10px;
+}
+
+.suggestBox {
+	padding: 20px;
+	width: 90%;
+}
+
+.cw-FlexTable td {
+	border: 1px solid #BBBBBB;
+	padding: 3px;
+}
+
+.cw-FlexTable-buttonPanel td {
+	border: 0px;
+}
+
+.textPanel {
+	background-color: #CCC1C3;
+	border: 1px solid #BFBFD2;
+	border-radius: 4px 4px 4px 4px;
+	width: inherit;
+	margin-right: 5px;
+	padding: 5px 5px 5px 5px;
+}
+
+.basicPanel {
+	margin: 5px;
+	padding: 5px;
+}
+
+.buttonMenu {
+	padding-left: 10px !important;
+	padding-right: 10px !important;
+	padding-top: 5px !important;
+	padding-bottom: 5px !important;
+	background-color: transparent;
+	border: 1px solid #fafafa;
+	border-right: 1px solid #c7c7c7;
+	color: white !important;
+}
+
+.buttonMenu:ACTIVE {
+	color: #00a99d !important;
+	background-color: white !important;
+}
+
+.buttonMenu:HOVER {
+	color: #00a99d !important;
+	background-color: white !important;
+}
+.closebutton{
+		background-color: #d3544d;
+		border-radius: 5px;
+		color: white;
+	}
