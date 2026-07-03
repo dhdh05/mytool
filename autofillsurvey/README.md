@@ -1,6 +1,6 @@
 # BKHN Auto Survey Evaluation (DevExpress Bypass)
 
-Userscript giúp tự động hóa quá trình điền khảo sát/đánh giá học phần cuối kỳ trên các hệ thống cổng thông tin đào tạo của Trường Đại học Bách Khoa Hà Nội (HUST): `ctt-sis.hust.edu.vn` và `ctt-daotao.hust.edu.vn`.
+Userscript giúp tự động hóa quá trình điền khảo sát/đánh giá học phần cuối kỳ trên các hệ thống cổng thông tin đào tạo của H đỏ: `ctt-sis.hxxx.edu.vn`.
 
 Dự án này được tối ưu hóa đặc biệt nhằm bypass qua cơ chế render giao diện giả lập (Fake DOM Radio Buttons) chằng chịt của thư viện **DevExpress** và tích hợp một bảng điều khiển ngay trên giao diện web.
 
@@ -50,8 +50,8 @@ Trước hết, bạn cần cài đặt một extension quản lý userscript tr
 ## 🛠️ Hướng dẫn sử dụng chi tiết
 
 Khi bạn truy cập vào các trang khảo sát có liên kết dạng:
-- `https://ctt-sis.hust.edu.vn/Surveys/...`
-- `https://ctt-daotao.hust.edu.vn/Surveys/...`
+- `https://ctt-sis.hxxx.edu.vn/Surveys/...`
+- `https://ctt-daotao.hxxx.edu.vn/Surveys/...`
 
 Bạn sẽ thấy một bảng điều khiển nổi xuất hiện ở góc dưới bên phải màn hình:
 
