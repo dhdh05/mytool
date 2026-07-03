@@ -8,7 +8,7 @@
 // @allFrames    true
 // @grant        GM_setValue
 // @grant        GM_getValue
-// @run-at       document-end
+// @run-at       document-end 
 // ==/UserScript==
 
 (function () {
@@ -22,12 +22,12 @@
             strategy: 'bkhn_survey_strategy'
         },
         defaults: {
-            isEnabled: false, // MẶC ĐỊNH TẮT AUTO THEO Ý ÔNG
+            isEnabled: false, //mặc định tool sẽ tắt
             strategy: 'realistic'
         },
         timers: {
-            scanIntervalMs: 1500, // Cố định luôn không cần chỉnh
-            reloadWaitMs: 4000    // Cố định luôn
+            scanIntervalMs: 2000, // thời gian quét phiếu(ms)
+            reloadWaitMs: 4000    // thời gian tải lại trang(ms)
         },
         keywords: {
             averageScore: ['bình thường', 'từ trên 2 giờ đến 3 giờ', 'không thay đổi'],
@@ -110,7 +110,7 @@
             panel.innerHTML = `
                 <div class="panel-toggle-icon">🔥</div>
                 <div class="panel-header">
-                    <div class="panel-title">🔥 BKHN Ultimate Auto</div>
+                    <div class="panel-title">🔥 BKHN AutoFillSurvey</div>
                     <button class="panel-minimize-btn">━</button>
                 </div>
                 <div class="panel-content">
