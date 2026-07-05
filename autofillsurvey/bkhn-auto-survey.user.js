@@ -11,6 +11,8 @@
 // @run-at       document-end 
 // ==/UserScript==
 
+
+//main function
 (function () {
     'use strict';
 
@@ -30,15 +32,18 @@
             reloadWaitMs: 4000    // thời gian tải lại trang(ms)
         },
         keywords: {
-            averageScore: ['bình thường', 'từ trên 2 giờ đến 3 giờ', 'không thay đổi'],
+            // Các từ khóa cho các câu hỏi trong phiếu khảo sát, để lại rỗng nếu không có câu hỏi cụ thể
+            averageScore: ['bình thường', 'vừa phải', 'phù hợp', 'từ trên 2 giờ đến 3 giờ', 'không thay đổi'],
             submitBtn: ['gửi khảo sát', 'gửi', 'lưu']
         },
+        // Các selectors để tìm các phần tử trong phiếu khảo sát
         selectors: {
             radioTarget: 'input[type="radio"], span[class*="dxeIRadioButton"]',
             submitCandidates: 'input[type="submit"], button, a, div[class*="dxbButton"]'
         }
     };
 
+    //class này dùng để giao diện người dùng
     class UIManager {
         constructor(automator) {
             this.automator = automator;
