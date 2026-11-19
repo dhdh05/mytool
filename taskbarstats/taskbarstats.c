@@ -14,8 +14,8 @@
  *   Pin BT     : SetupAPI, thuoc tinh PnP {104EA319-6EE2-4701-BD47-8DDBF425BBE5} 2
  *                (cung nguon voi muc Bluetooth trong Settings) - chuot, phim, tai nghe Bluetooth
  *
- * GPU / VRAM: may hien tai khong co card roi nen phan hien thi va lay so lieu GPU/VRAM
- * dang duoc COMMENT (tim "[GPU]"). Bo comment cac dong do neu sang may co card roi.
+ * GPU / VRAM: mac dinh TAT (de nhe may), bat trong menu chuot phai. Counter GPU chi duoc
+ * tao khi co it nhat 1 muc GPU/VRAM dang hien, tat het thi giai phong.
  *
  * Thao tac: keo chuot trai de doi vi tri, chuot phai de mo menu.
  */
@@ -57,8 +57,8 @@
 enum {
     IT_CPU,
     IT_RAM,
-    // IT_GPU,    /* [GPU] */
-    // IT_VRAM,   /* [GPU] */
+    IT_GPU,
+    IT_VRAM,
     IT_SSD,
     IT_BAT,
     IT_COUNT
@@ -67,12 +67,13 @@ static const WCHAR *itemMenu[IT_COUNT] = {
     // L"CPU (% + nhi\u1ec7t \u0111\u1ed9)",   /* may khong doc duoc nhiet do CPU */
     L"CPU",
     L"RAM",
-    // L"GPU (% + nhi\u1ec7t \u0111\u1ed9)",   /* [GPU] */
-    // L"VRAM",                                  /* [GPU] */
+    L"GPU (% + nhi\u1ec7t \u0111\u1ed9)",
+    L"VRAM",
     L"Nhi\u1ec7t \u0111\u1ed9 SSD",
     L"Pin Bluetooth",
 };
-static DWORD showMask = (1u << IT_COUNT) - 1;   /* mac dinh hien tat ca */
+#define GPU_MASK ((1u << IT_GPU) | (1u << IT_VRAM))
+static DWORD showMask = ((1u << IT_COUNT) - 1) & ~GPU_MASK;   /* mac dinh: tat ca tru GPU/VRAM */
 
 /* ------------------------------------------------------------------ */
 /* D3DKMT (tu khai bao de khong can WDK)                               */
@@ -123,6 +124,7 @@ static WCHAR batName[64] = L"Pin";    /* ten thiet bi co pin thap nhat */
 
 static ULONGLONG pIdle, pKern, pUser;
 static PDH_HQUERY   hq;
+static PDH_HQUERY   hqGpu;               /* query rieng cho GPU, chi mo khi can */
 static PDH_HCOUNTER cGpu, cVram, cTz;
 static BOOL tzHighPrec;
 
@@ -305,15 +307,26 @@ static void init_pdh(void)
 {
     if (PdhOpenQueryW(NULL, 0, &hq) != ERROR_SUCCESS) { hq = NULL; return; }
     /* PdhAddEnglishCounter: chay dung ca tren Windows tieng Viet / ngon ngu khac */
-    /* [GPU] may khong co card roi -> tat counter GPU/VRAM (counter GPU Engine kha ton CPU)
-    if (PdhAddEnglishCounterW(hq, L"\\GPU Engine(*engtype_3D)\\Utilization Percentage", 0, &cGpu) != ERROR_SUCCESS) cGpu = NULL;
-    if (PdhAddEnglishCounterW(hq, L"\\GPU Adapter Memory(*)\\Dedicated Usage", 0, &cVram) != ERROR_SUCCESS) cVram = NULL;
-    */
     if (PdhAddEnglishCounterW(hq, L"\\Thermal Zone Information(*)\\High Precision Temperature", 0, &cTz) == ERROR_SUCCESS)
         tzHighPrec = TRUE;
     else if (PdhAddEnglishCounterW(hq, L"\\Thermal Zone Information(*)\\Temperature", 0, &cTz) != ERROR_SUCCESS)
         cTz = NULL;
     PdhCollectQueryData(hq);
+}
+
+/* Counter GPU Engine kha ton CPU -> chi mo query GPU khi user bat muc GPU/VRAM */
+static void gpu_query_update(void)
+{
+    BOOL need = (showMask & GPU_MASK) != 0;
+    if (need && !hqGpu) {
+        if (PdhOpenQueryW(NULL, 0, &hqGpu) != ERROR_SUCCESS) { hqGpu = NULL; return; }
+        if (PdhAddEnglishCounterW(hqGpu, L"\\GPU Engine(*engtype_3D)\\Utilization Percentage", 0, &cGpu) != ERROR_SUCCESS) cGpu = NULL;
+        if (PdhAddEnglishCounterW(hqGpu, L"\\GPU Adapter Memory(*)\\Dedicated Usage", 0, &cVram) != ERROR_SUCCESS) cVram = NULL;
+        PdhCollectQueryData(hqGpu);
+    } else if (!need && hqGpu) {
+        PdhCloseQuery(hqGpu);
+        hqGpu = NULL; cGpu = NULL; cVram = NULL;
+    }
 }
 
 /* Lay mang gia tri cua counter co wildcard. Buffer dung chung: xu ly xong moi goi tiep. */
@@ -374,25 +387,6 @@ static void sample(void)
     }
 
     if (hq && PdhCollectQueryData(hq) == ERROR_SUCCESS) {
-        // [GPU] tam tat - bo comment cac dong duoi neu may co card roi
-        // /* GPU %: cong tat ca engine 3D cua GPU da chon */
-        // double g = 0;
-        // a = pdh_array(cGpu, &n);
-        // for (i = 0; i < n; i++)
-        //     if (valid(&a[i]) && mine(a[i].szName)) g += a[i].FmtValue.doubleValue;
-        // S.gpu = g > 100 ? 100 : (int)(g + 0.5);
-
-        // /* VRAM */
-        // {
-        //     double v = 0;
-        //     a = pdh_array(cVram, &n);
-        //     for (i = 0; i < n; i++)
-        //         if (valid(&a[i]) && mine(a[i].szName)) v += a[i].FmtValue.doubleValue;
-        //     S.vramUsed = (ULONGLONG)v;
-        //     S.vram = vramTotal ? (int)(S.vramUsed * 100 / vramTotal) : 0;
-        //     if (S.vram > 100) S.vram = 100;
-        // }
-
         /* CPU temp: lay thermal zone nong nhat */
         {
             double best = -1000;
@@ -409,7 +403,27 @@ static void sample(void)
         }
     }
 
-    // S.gpuT = read_gpu_temp();   /* [GPU] */
+    if (hqGpu && PdhCollectQueryData(hqGpu) == ERROR_SUCCESS) {
+        /* GPU %: cong tat ca engine 3D cua GPU da chon */
+        double g = 0;
+        a = pdh_array(cGpu, &n);
+        for (i = 0; i < n; i++)
+            if (valid(&a[i]) && mine(a[i].szName)) g += a[i].FmtValue.doubleValue;
+        S.gpu = g > 100 ? 100 : (int)(g + 0.5);
+
+        /* VRAM */
+        {
+            double v = 0;
+            a = pdh_array(cVram, &n);
+            for (i = 0; i < n; i++)
+                if (valid(&a[i]) && mine(a[i].szName)) v += a[i].FmtValue.doubleValue;
+            S.vramUsed = (ULONGLONG)v;
+            S.vram = vramTotal ? (int)(S.vramUsed * 100 / vramTotal) : 0;
+            if (S.vram > 100) S.vram = 100;
+        }
+    }
+
+    if (showMask & (1u << IT_GPU)) S.gpuT = read_gpu_temp();
     if (tickCount % 5 == 0) S.ssdT = read_ssd_temp(); /* SSD doi cham, 5 giay doc 1 lan */
     if (tickCount % 30 == 0) S.bat = read_bt_battery(); /* pin doi rat cham, 30 giay doc 1 lan */
     tickCount++;
@@ -443,7 +457,7 @@ static void load_offset(void)
 static void load_show(void)
 {
     DWORD v, sz = sizeof v;
-    if (RegGetValueW(HKEY_CURRENT_USER, CFGKEY, L"Show", RRF_RT_REG_DWORD, NULL, &v, &sz) == ERROR_SUCCESS &&
+    if (RegGetValueW(HKEY_CURRENT_USER, CFGKEY, L"Items", RRF_RT_REG_DWORD, NULL, &v, &sz) == ERROR_SUCCESS &&
         (v & ((1u << IT_COUNT) - 1)))
         showMask = v & ((1u << IT_COUNT) - 1);
 }
@@ -452,7 +466,7 @@ static void save_show(void)
 {
     HKEY k;
     if (RegCreateKeyExW(HKEY_CURRENT_USER, CFGKEY, 0, NULL, 0, KEY_SET_VALUE, NULL, &k, NULL) != ERROR_SUCCESS) return;
-    RegSetValueExW(k, L"Show", 0, REG_DWORD, (BYTE *)&showMask, sizeof showMask);
+    RegSetValueExW(k, L"Items", 0, REG_DWORD, (BYTE *)&showMask, sizeof showMask);
     RegCloseKey(k);
 }
 
@@ -603,18 +617,17 @@ static void make_cell(int it, Cell *c)
         fmt_pct(c->v1, S.ram);  c->s1 = sev(S.ram, 75, 90);
         fmt_gb(c->v2, S.ramUsed);
         break;
-    /* [GPU] bo comment neu may co card roi (nho bo comment ca IT_GPU/IT_VRAM o enum)
     case IT_GPU:
         c->lab = L"GPU";
         fmt_pct(c->v1, S.gpu);  c->s1 = sev(S.gpu, 70, 90);
         fmt_temp(c->v2, S.gpuT); c->s2 = sev(S.gpuT, 75, 87);
+        if (S.gpuT == NA) c->has2 = FALSE;   /* driver khong bao nhiet do -> chi hien % */
         break;
     case IT_VRAM:
         c->lab = L"VRAM";
         fmt_pct(c->v1, S.vram); c->s1 = sev(S.vram, 75, 90);
         fmt_gb(c->v2, S.vramUsed);
         break;
-    */
     case IT_SSD:
         c->lab = L"SSD";
         fmt_temp(c->v1, S.ssdT); c->s1 = sev(S.ssdT, 60, 70);
@@ -821,7 +834,7 @@ static LRESULT CALLBACK wndproc(HWND h, UINT m, WPARAM wp, LPARAM lp)
         DestroyMenu(mn);
         if (cmd >= IDM_ITEM0 && cmd < IDM_ITEM0 + IT_COUNT) {
             DWORD m = showMask ^ (1u << (cmd - IDM_ITEM0));
-            if (m) { showMask = m; save_show(); update_window(); } /* khong cho tat het */
+            if (m) { showMask = m; save_show(); gpu_query_update(); update_window(); } /* khong cho tat het */
         }
         else if (cmd == IDM_AUTOSTART) autostart_set(!autostart_get());
         else if (cmd == IDM_RESETPOS) { offsetLeft = -1; save_offset(); update_window(); }
@@ -862,10 +875,11 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE prev, PWSTR cmd, int show)
     init_layout();
     if (autostart_get()) autostart_set(TRUE); /* cap nhat duong dan neu exe da bi chuyen cho khac */
 
-    // pick_gpu();        /* [GPU] */
-    // init_gpu_temp();   /* [GPU] */
+    pick_gpu();
+    init_gpu_temp();
     init_disk();
     init_pdh();
+    gpu_query_update();
     sample();
 
     ZeroMemory(&wc, sizeof wc);
@@ -890,6 +904,7 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE prev, PWSTR cmd, int show)
     }
 
     if (hq) PdhCloseQuery(hq);
+    if (hqGpu) PdhCloseQuery(hqGpu);
     if (hDisk != INVALID_HANDLE_VALUE) CloseHandle(hDisk);
     if (mtx) CloseHandle(mtx);
     return 0;
