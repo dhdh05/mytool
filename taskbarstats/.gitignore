@@ -1,0 +1,4 @@
+# File trung gian khi build
+*.o
+*.obj
+*.res

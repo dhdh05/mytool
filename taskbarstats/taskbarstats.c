@@ -17,6 +17,9 @@
  * GPU / VRAM: mac dinh TAT (de nhe may), bat trong menu chuot phai. Counter GPU chi duoc
  * tao khi co it nhat 1 muc GPU/VRAM dang hien, tat het thi giai phong.
  *
+ * Nhieu man hinh: hien tren taskbar cua MOI man (Shell_TrayWnd + Shell_SecondaryTrayWnd).
+ * Doc cam bien o luong rieng (sensor_thread): luong giao dien gan voi taskbar khong bao gio bi chan.
+ *
  * Thao tac: keo chuot trai de doi vi tri, chuot phai de mo menu.
  */
 #define WIN32_LEAN_AND_MEAN
@@ -122,6 +125,22 @@ static const DEVPROPKEY PKEY_DeviceDesc =
     { { 0xA45C254E, 0xDF1C, 0x4EFD, { 0x80, 0x20, 0x67, 0xD1, 0x46, 0xA8, 0x50, 0xE0 } }, 2 };
 static WCHAR batName[64] = L"Pin";    /* ten thiet bi co pin thap nhat */
 
+/* ---- Luong doc cam bien ----
+ * S / batName: chi luong cam bien (sensor_thread) ghi.
+ * D / batNameD: ban sao da chot, luong giao dien doc qua V / batNameV.
+ * Khoa chi giu trong luc copy vai chuc byte -> luong giao dien khong bao gio phai cho thiet bi. */
+typedef struct {
+    int cpu, ram, gpu, vram;
+    ULONGLONG ramUsed, vramUsed;
+    int cpuT, gpuT, ssdT;
+    int bat;
+} Stats;
+static Stats D = { 0, 0, 0, 0, 0, 0, NA, NA, NA, NA }, V = { 0, 0, 0, 0, 0, 0, NA, NA, NA, NA };
+static WCHAR batNameD[64] = L"Pin", batNameV[64] = L"Pin";
+static CRITICAL_SECTION csStats;
+static HANDLE hStop, hSensor;
+#define WM_APP_DATA (WM_APP + 1)       /* luong cam bien bao co so lieu moi */
+
 static ULONGLONG pIdle, pKern, pUser;
 static PDH_HQUERY   hq;
 static PDH_HQUERY   hqGpu;               /* query rieng cho GPU, chi mo khi can */
@@ -142,19 +161,38 @@ static void *nvmlDev;
 static HANDLE hDisk = INVALID_HANDLE_VALUE;
 static int    tickCount;
 
-/* Giao dien */
-static HWND    hwnd;
+/* Giao dien
+ * Moi taskbar (Shell_TrayWnd o man chinh + Shell_SecondaryTrayWnd o moi man phu)
+ * co 1 cua so overlay rieng, gan lam CUA SO CON cua taskbar do. Nho vay khi mo
+ * Start / Search (Windows day taskbar len tang cao hon moi cua so TOPMOST) overlay
+ * van nam tren taskbar, khong bi che. Cua so con co alpha (layered child) can
+ * manifest khai bao Windows 8+  ->  xem taskbarstats.rc / taskbarstats.manifest.
+ * Neu khong tao duoc cua so con thi lui ve cach cu (cua so popup TOPMOST).        */
+#define MAXBARS 8
+typedef struct {
+    HWND hwnd;      /* cua so overlay cua minh */
+    HWND tb;        /* taskbar ma no nam tren */
+    int  x;         /* vi tri hien tai, toa do man hinh (dung khi keo) */
+    BOOL child;     /* TRUE = cua so con cua taskbar, FALSE = popup TOPMOST (du phong) */
+    DWORD lastHash; /* noi dung + vi tri lan ve truoc: giong het thi khong ve lai */
+    BOOL  drawn;
+} Bar;
+static Bar     bars[MAXBARS];
+static int     nBars;                 /* so slot da tao cua so */
+static HWND    hwnd;                  /* cua so an cua app: timer, menu, nhan WM_SETTINGCHANGE... */
+static HINSTANCE hInst;
 static HFONT   fLabel, fValue;
 static HDC     memdc;
 static HBITMAP dib;
 static DWORD  *bits;
 static int     dibW, dibH;
 static int     dpi = 96;
-static int     winX, winY, winW, winH;
+static int     winY, winW, winH;
 static int     lineH, v1W, v2W, gapV, gapL, colGap, pad;
 static BOOL    light;
 static int     offsetLeft = -1;       /* khoang cach tu mep trai taskbar, -1 = mac dinh (sat goc trai) */
 static BOOL    dragging;
+static int     dragBar = -1;          /* bar dang bi keo */
 static int     dragStartCursor, dragStartWin;
 static COLORREF col[4];               /* 0 nhan, 1 binh thuong, 2 canh bao, 3 nguy hiem */
 
@@ -608,35 +646,35 @@ static void make_cell(int it, Cell *c)
     switch (it) {
     case IT_CPU:
         c->lab = L"CPU";
-        fmt_pct(c->v1, S.cpu);  c->s1 = sev(S.cpu, 70, 90);
-        fmt_temp(c->v2, S.cpuT); c->s2 = sev(S.cpuT, 75, 90);
-        if (S.cpuT == NA) c->has2 = FALSE;   /* khong doc duoc nhiet do -> chi hien % */
+        fmt_pct(c->v1, V.cpu);  c->s1 = sev(V.cpu, 70, 90);
+        fmt_temp(c->v2, V.cpuT); c->s2 = sev(V.cpuT, 75, 90);
+        if (V.cpuT == NA) c->has2 = FALSE;   /* khong doc duoc nhiet do -> chi hien % */
         break;
     case IT_RAM:
         c->lab = L"RAM";
-        fmt_pct(c->v1, S.ram);  c->s1 = sev(S.ram, 75, 90);
-        fmt_gb(c->v2, S.ramUsed);
+        fmt_pct(c->v1, V.ram);  c->s1 = sev(V.ram, 75, 90);
+        fmt_gb(c->v2, V.ramUsed);
         break;
     case IT_GPU:
         c->lab = L"GPU";
-        fmt_pct(c->v1, S.gpu);  c->s1 = sev(S.gpu, 70, 90);
-        fmt_temp(c->v2, S.gpuT); c->s2 = sev(S.gpuT, 75, 87);
-        if (S.gpuT == NA) c->has2 = FALSE;   /* driver khong bao nhiet do -> chi hien % */
+        fmt_pct(c->v1, V.gpu);  c->s1 = sev(V.gpu, 70, 90);
+        fmt_temp(c->v2, V.gpuT); c->s2 = sev(V.gpuT, 75, 87);
+        if (V.gpuT == NA) c->has2 = FALSE;   /* driver khong bao nhiet do -> chi hien % */
         break;
     case IT_VRAM:
         c->lab = L"VRAM";
-        fmt_pct(c->v1, S.vram); c->s1 = sev(S.vram, 75, 90);
-        fmt_gb(c->v2, S.vramUsed);
+        fmt_pct(c->v1, V.vram); c->s1 = sev(V.vram, 75, 90);
+        fmt_gb(c->v2, V.vramUsed);
         break;
     case IT_SSD:
         c->lab = L"SSD";
-        fmt_temp(c->v1, S.ssdT); c->s1 = sev(S.ssdT, 60, 70);
+        fmt_temp(c->v1, V.ssdT); c->s1 = sev(V.ssdT, 60, 70);
         c->has2 = FALSE;
         break;
     case IT_BAT:
-        c->lab = batName;        /* ten thiet bi Bluetooth co pin thap nhat */
-        if (S.bat == NA) lstrcpyW(c->v1, L"--"); else fmt_pct(c->v1, S.bat);
-        c->s1 = sev_bat(S.bat);
+        c->lab = batNameV;        /* ten thiet bi Bluetooth co pin thap nhat */
+        if (V.bat == NA) lstrcpyW(c->v1, L"--"); else fmt_pct(c->v1, V.bat);
+        c->s1 = sev_bat(V.bat);
         c->has2 = FALSE;
         break;
     }
@@ -708,62 +746,220 @@ static void render(void)
         if (!(bits[i] >> 24)) bits[i] = 0x01000000;
 }
 
-static BOOL fullscreen_app(void)
+static int find_bar(HWND w)
+{
+    int i;
+    if (!w) return -1;
+    for (i = 0; i < nBars; i++) if (bars[i].hwnd == w) return i;
+    return -1;
+}
+
+static BOOL is_taskbar_class(const WCHAR *cls)
+{
+    return !lstrcmpW(cls, L"Shell_TrayWnd") || !lstrcmpW(cls, L"Shell_SecondaryTrayWnd");
+}
+
+/* Co app full screen tren dung man hinh 'mon' khong (man khac van hien binh thuong) */
+static BOOL fullscreen_app(HMONITOR mon)
 {
     HWND fg = GetForegroundWindow();
     WCHAR cls[64];
     RECT r;
     MONITORINFO mi;
-    if (!fg || fg == GetDesktopWindow() || fg == GetShellWindow() || fg == hwnd) return FALSE;
+    if (!fg || fg == GetDesktopWindow() || fg == GetShellWindow() || fg == hwnd || find_bar(fg) >= 0) return FALSE;
     GetClassNameW(fg, cls, 64);
-    if (!lstrcmpW(cls, L"WorkerW") || !lstrcmpW(cls, L"Progman") || !lstrcmpW(cls, L"Shell_TrayWnd")) return FALSE;
+    if (!lstrcmpW(cls, L"WorkerW") || !lstrcmpW(cls, L"Progman") || is_taskbar_class(cls)) return FALSE;
+    /* Start, Search (Win+Q), Notification Center, Widgets... la cua so trong suot phu ca man hinh
+       -> khong phai app full screen that */
+    if (!lstrcmpW(cls, L"Windows.UI.Core.CoreWindow") ||
+        !lstrcmpW(cls, L"XamlExplorerHostIslandWindow") ||
+        !lstrcmpW(cls, L"TopLevelWindowForOverflowXamlIsland")) return FALSE;
+    if (MonitorFromWindow(fg, MONITOR_DEFAULTTONEAREST) != mon) return FALSE;
     GetWindowRect(fg, &r);
     mi.cbSize = sizeof mi;
-    GetMonitorInfoW(MonitorFromWindow(fg, MONITOR_DEFAULTTONEAREST), &mi);
+    GetMonitorInfoW(mon, &mi);
     return r.left <= mi.rcMonitor.left && r.top <= mi.rcMonitor.top &&
            r.right >= mi.rcMonitor.right && r.bottom >= mi.rcMonitor.bottom;
 }
 
-/* Tinh vi tri, ve lai va day cua so len tren taskbar */
-static void update_window(void)
+/* Gom danh sach taskbar: [0] = man chinh, sau do la cac man phu */
+static HWND foundTb[MAXBARS];
+static int  nFound;
+
+static BOOL CALLBACK enum_tb(HWND w, LPARAM lp)
 {
-    HWND tb = FindWindowW(L"Shell_TrayWnd", NULL);
+    WCHAR cls[64];
+    (void)lp;
+    if (nFound < MAXBARS && GetClassNameW(w, cls, 64) && !lstrcmpW(cls, L"Shell_SecondaryTrayWnd"))
+        foundTb[nFound++] = w;
+    return TRUE;
+}
+
+static void find_taskbars(void)
+{
+    nFound = 0;
+    foundTb[nFound++] = FindWindowW(L"Shell_TrayWnd", NULL);   /* co the NULL khi Explorer dang khoi dong lai */
+    EnumWindows(enum_tb, 0);
+}
+
+/* Tao overlay cho taskbar 'tb': uu tien cua so con cua taskbar, that bai thi dung popup TOPMOST */
+static void create_overlay(Bar *b, HWND tb)
+{
+    b->tb = tb;
+    b->x = 0;
+    b->drawn = FALSE;
+    b->child = TRUE;
+    b->hwnd = CreateWindowExW(WS_EX_LAYERED | WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW,
+                              APPNAME, NULL, WS_CHILD | WS_CLIPSIBLINGS, 0, 0, 10, 10, tb, NULL, hInst, NULL);
+    if (!b->hwnd) {                   /* vd. exe khong co manifest -> layered child bi tu choi */
+        b->child = FALSE;
+        b->hwnd = CreateWindowExW(WS_EX_LAYERED | WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE,
+                                  APPNAME, APPNAME, WS_POPUP, 0, 0, 10, 10, NULL, NULL, hInst, NULL);
+    }
+}
+
+static void destroy_overlay(Bar *b)
+{
+    if (b->hwnd && IsWindow(b->hwnd)) DestroyWindow(b->hwnd);
+    b->hwnd = NULL;
+    b->tb = NULL;
+}
+
+/* Bam FNV-1a: dau van tay noi dung + vi tri, de bo qua lan ve khong can thiet */
+static DWORD fnv(DWORD h, const void *p, size_t n)
+{
+    const BYTE *q = (const BYTE *)p;
+    while (n--) { h ^= *q++; h *= 16777619u; }
+    return h;
+}
+
+static DWORD frame_hash(int x, int y)
+{
+    DWORD h = 2166136261u;
+    int i;
+    for (i = 0; i < nCells; i++) {
+        h = fnv(h, cells[i].lab, (size_t)lstrlenW(cells[i].lab) * sizeof(WCHAR));
+        h = fnv(h, cells[i].v1, sizeof cells[i].v1);
+        h = fnv(h, cells[i].v2, sizeof cells[i].v2);
+        h = fnv(h, &cells[i].s1, sizeof(int) * 2);
+        h = fnv(h, &cells[i].has2, sizeof(BOOL));
+    }
+    h = fnv(h, &x, sizeof x);   h = fnv(h, &y, sizeof y);
+    h = fnv(h, &winW, sizeof winW); h = fnv(h, &winH, sizeof winH);
+    h = fnv(h, col, sizeof col); h = fnv(h, &lineH, sizeof lineH);
+    return h;
+}
+
+/* Ve va dat 1 overlay len taskbar cua no */
+static void update_bar(int i)
+{
+    Bar *b = &bars[i];
     RECT t;
     MONITORINFO mi;
+    HMONITOR mon;
     POINT dst, src = { 0, 0 };
     SIZE sz;
     BLENDFUNCTION bf = { AC_SRC_OVER, 0, 255, AC_SRC_ALPHA };
 
-    if (!tb || !GetWindowRect(tb, &t)) { ShowWindow(hwnd, SW_HIDE); return; }
+    if (!b->hwnd) return;
+    if (!b->tb || !IsWindow(b->tb) || !GetWindowRect(b->tb, &t)) { ShowWindow(b->hwnd, SW_HIDE); b->drawn = FALSE; return; }
+    mon = MonitorFromWindow(b->tb, MONITOR_DEFAULTTONEAREST);
     mi.cbSize = sizeof mi;
-    GetMonitorInfoW(MonitorFromWindow(tb, MONITOR_DEFAULTTOPRIMARY), &mi);
+    GetMonitorInfoW(mon, &mi);
 
-    /* An khi: taskbar doc, taskbar dang tu an, hoac co app full screen */
+    /* An khi: taskbar doc, taskbar dang tu an, hoac co app full screen tren man nay */
     if ((t.bottom - t.top) > (t.right - t.left) ||
         t.top >= mi.rcMonitor.bottom - SC(4) || t.bottom <= mi.rcMonitor.top + SC(4) ||
-        fullscreen_app()) {
-        ShowWindow(hwnd, SW_HIDE);
+        fullscreen_app(mon)) {
+        ShowWindow(b->hwnd, SW_HIDE);
+        b->drawn = FALSE;
         return;
     }
 
     winH = t.bottom - t.top;
     winY = t.top;
     layout();                         /* tinh winW theo cac muc dang bat */
-    if (dragging) {
-        /* giu nguyen winX */
+    if (dragging && dragBar == i) {
+        /* giu nguyen b->x */
     } else if (offsetLeft >= 0) {
-        winX = t.left + offsetLeft;
+        b->x = t.left + offsetLeft;   /* cung khoang cach tu mep trai tren moi taskbar */
     } else {
-        winX = t.left + SC(8); /* mac dinh: goc trai taskbar */
+        b->x = t.left + SC(8);        /* mac dinh: goc trai taskbar */
     }
-    if (winX < t.left) winX = t.left;
-    if (winX + winW > t.right) winX = t.right - winW;
+    if (b->x + winW > t.right) b->x = t.right - winW;
+    if (b->x < t.left) b->x = t.left;
 
-    render();
-    dst.x = winX; dst.y = winY;
     sz.cx = winW; sz.cy = winH;
-    UpdateLayeredWindow(hwnd, NULL, &dst, &sz, memdc, &src, 0, &bf, ULW_ALPHA);
-    SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+    {
+        DWORD h = frame_hash(b->x, winY);
+        if (b->drawn && h == b->lastHash && IsWindowVisible(b->hwnd)) {
+            /* khong co gi thay doi: khoi ve lai, chi giu overlay nam tren cung */
+            if (b->child) {
+                if (GetTopWindow(b->tb) != b->hwnd)
+                    SetWindowPos(b->hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+            } else {
+                SetWindowPos(b->hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+            }
+            return;
+        }
+        b->lastHash = h;
+        b->drawn = TRUE;
+    }
+    render();
+    if (b->child) {
+        /* cua so con: vi tri tinh theo toa do client cua taskbar, dat len tren cac cua so con khac (XAML) */
+        dst.x = b->x; dst.y = winY;
+        ScreenToClient(b->tb, &dst);
+        UpdateLayeredWindow(b->hwnd, NULL, NULL, &sz, memdc, &src, 0, &bf, ULW_ALPHA);
+        SetWindowPos(b->hwnd, HWND_TOP, dst.x, dst.y, winW, winH, SWP_NOACTIVATE | SWP_SHOWWINDOW);
+    } else {
+        dst.x = b->x; dst.y = winY;
+        UpdateLayeredWindow(b->hwnd, NULL, &dst, &sz, memdc, &src, 0, &bf, ULW_ALPHA);
+        SetWindowPos(b->hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+    }
+}
+
+/* Tim lai cac taskbar (cam/rut man hinh), tao them overlay neu can, cap nhat tat ca */
+static ULONGLONG nextScan;            /* thoi diem quet lai taskbar dinh ky (ms) */
+static ULONGLONG burstUntil;          /* sau khi cam/rut man: quet moi lan cap nhat toi thoi diem nay */
+static UINT msgTaskbarCreated;        /* Explorer khoi dong lai */
+
+static BOOL bars_valid(void)
+{
+    int i;
+    for (i = 0; i < nBars; i++)
+        if (bars[i].tb && (!IsWindow(bars[i].tb) || !bars[i].hwnd || !IsWindow(bars[i].hwnd))) return FALSE;
+    return nBars > 0 && bars[0].tb;
+}
+
+static void update_window(void)
+{
+    int i;
+    /* lay ban sao so lieu moi nhat (giu khoa vai micro giay) */
+    EnterCriticalSection(&csStats);
+    V = D;
+    lstrcpyW(batNameV, batNameD);
+    LeaveCriticalSection(&csStats);
+
+    /* Chi quet lai danh sach taskbar khi can: cam/rut man, Explorer khoi dong lai,
+       handle chet, hoac moi 5 giay mot lan de du phong. */
+    if (!dragging) {
+        ULONGLONG now = GetTickCount64();
+        if (now >= nextScan || now < burstUntil || !bars_valid()) {
+            nextScan = now + 5000;
+            find_taskbars();
+            for (i = 0; i < nFound; i++) {
+                /* taskbar moi, hoac overlay bi huy theo taskbar (Explorer khoi dong lai) -> tao lai */
+                if (bars[i].tb != foundTb[i] || !bars[i].hwnd || !IsWindow(bars[i].hwnd)) {
+                    destroy_overlay(&bars[i]);
+                    if (foundTb[i]) create_overlay(&bars[i], foundTb[i]);
+                }
+            }
+            for (; i < nBars; i++) destroy_overlay(&bars[i]);   /* man phu da rut ra */
+            nBars = nFound;
+        }
+    }
+    for (i = 0; i < nBars; i++) update_bar(i);
 }
 
 /* Khi user bam vao taskbar / doi cua so, day app len lai ngay (khong doi 1 giay) */
@@ -776,43 +972,76 @@ static void CALLBACK on_foreground(HWINEVENTHOOK h, DWORD ev, HWND w, LONG o, LO
 /* ------------------------------------------------------------------ */
 /* Cua so                                                              */
 /* ------------------------------------------------------------------ */
+/* Luong cam bien: khoi tao + doc moi giay, khong bao gio dung toi cua so.
+   Neu 1 lan doc bi treo thi chi so lieu dung cap nhat, taskbar va giao dien van muot. */
+static DWORD WINAPI sensor_thread(LPVOID arg)
+{
+    (void)arg;
+    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
+    pick_gpu();
+    init_gpu_temp();
+    init_disk();
+    init_pdh();
+    do {
+        gpu_query_update();           /* mo/dong query GPU theo menu - chi luong nay dung toi PDH */
+        sample();
+        EnterCriticalSection(&csStats);
+        D.cpu = S.cpu; D.ram = S.ram; D.gpu = S.gpu; D.vram = S.vram;
+        D.ramUsed = S.ramUsed; D.vramUsed = S.vramUsed;
+        D.cpuT = S.cpuT; D.gpuT = S.gpuT; D.ssdT = S.ssdT; D.bat = S.bat;
+        lstrcpyW(batNameD, batName);
+        LeaveCriticalSection(&csStats);
+        PostMessageW(hwnd, WM_APP_DATA, 0, 0);    /* khong cho, giao dien tu ve khi ranh */
+    } while (WaitForSingleObject(hStop, 1000) == WAIT_TIMEOUT);
+    if (hq) PdhCloseQuery(hq);
+    if (hqGpu) PdhCloseQuery(hqGpu);
+    if (hDisk != INVALID_HANDLE_VALUE) CloseHandle(hDisk);
+    return 0;
+}
+
 static LRESULT CALLBACK wndproc(HWND h, UINT m, WPARAM wp, LPARAM lp)
 {
     switch (m) {
-    case WM_TIMER:
-        sample();
-        update_window();
+    case WM_APP_DATA:                 /* so lieu moi tu luong cam bien */
+    case WM_TIMER:                    /* du phong: van cap nhat vi tri du luong cam bien bi treo */
+        if (!dragging) update_window();
         return 0;
     case WM_MOUSEACTIVATE:
         return MA_NOACTIVATE;
     case WM_LBUTTONDOWN: {
         POINT p;
+        int i = find_bar(h);
+        if (i < 0) return 0;
         GetCursorPos(&p);
         dragging = TRUE;
+        dragBar = i;
         dragStartCursor = p.x;
-        dragStartWin = winX;
+        dragStartWin = bars[i].x;
         SetCapture(h);
         return 0;
     }
     case WM_MOUSEMOVE:
-        if (dragging) {
+        if (dragging && dragBar >= 0) {
             POINT p;
             GetCursorPos(&p);
-            winX = dragStartWin + (p.x - dragStartCursor);
-            update_window();
+            bars[dragBar].x = dragStartWin + (p.x - dragStartCursor);
+            update_bar(dragBar);
         }
         return 0;
     case WM_LBUTTONUP:
         if (dragging) {
             RECT t;
-            HWND tb = FindWindowW(L"Shell_TrayWnd", NULL);
+            int i = dragBar;
             dragging = FALSE;
+            dragBar = -1;
             ReleaseCapture();
-            if (tb && GetWindowRect(tb, &t)) {
-                offsetLeft = winX - t.left;
+            /* luu khoang cach tu mep trai -> ap dung cho tat ca taskbar */
+            if (i >= 0 && bars[i].tb && GetWindowRect(bars[i].tb, &t)) {
+                offsetLeft = bars[i].x - t.left;
                 if (offsetLeft < 0) offsetLeft = 0;
                 save_offset();
             }
+            update_window();
         }
         return 0;
     case WM_RBUTTONUP: {
@@ -829,16 +1058,17 @@ static LRESULT CALLBACK wndproc(HWND h, UINT m, WPARAM wp, LPARAM lp)
         AppendMenuW(mn, MF_SEPARATOR, 0, NULL);
         AppendMenuW(mn, MF_STRING, IDM_EXIT, L"Tho\u00e1t");
         GetCursorPos(&p);
-        SetForegroundWindow(h);
-        cmd = TrackPopupMenu(mn, TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_BOTTOMALIGN, p.x, p.y, 0, h, NULL);
+        SetForegroundWindow(hwnd);
+        cmd = TrackPopupMenu(mn, TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_BOTTOMALIGN, p.x, p.y, 0, hwnd, NULL);
+        PostMessageW(hwnd, WM_NULL, 0, 0);
         DestroyMenu(mn);
         if (cmd >= IDM_ITEM0 && cmd < IDM_ITEM0 + IT_COUNT) {
             DWORD m = showMask ^ (1u << (cmd - IDM_ITEM0));
-            if (m) { showMask = m; save_show(); gpu_query_update(); update_window(); } /* khong cho tat het */
+            if (m) { showMask = m; save_show(); update_window(); } /* khong cho tat het */
         }
         else if (cmd == IDM_AUTOSTART) autostart_set(!autostart_get());
         else if (cmd == IDM_RESETPOS) { offsetLeft = -1; save_offset(); update_window(); }
-        else if (cmd == IDM_EXIT) DestroyWindow(h);
+        else if (cmd == IDM_EXIT) DestroyWindow(hwnd);   /* dong cua so chinh -> thoat */
         return 0;
     }
     case WM_SETTINGCHANGE:
@@ -847,10 +1077,20 @@ static LRESULT CALLBACK wndproc(HWND h, UINT m, WPARAM wp, LPARAM lp)
         return 0;
     case WM_DISPLAYCHANGE:
         init_layout();
+        burstUntil = GetTickCount64() + 3000;   /* taskbar man phu duoc tao tre 0.5-2s sau khi cam */
         update_window();
         return 0;
     case WM_DESTROY:
-        PostQuitMessage(0);
+        if (h == hwnd) {                     /* chi cua so an cua app moi thoat app */
+            int i;
+            for (i = 0; i < nBars; i++) destroy_overlay(&bars[i]);
+            PostQuitMessage(0);
+        }
+        return 0;
+    }
+    if (m == msgTaskbarCreated && msgTaskbarCreated) {   /* Explorer vua khoi dong lai */
+        burstUntil = GetTickCount64() + 3000;
+        update_window();
         return 0;
     }
     return DefWindowProcW(h, m, wp, lp);
@@ -875,12 +1115,8 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE prev, PWSTR cmd, int show)
     init_layout();
     if (autostart_get()) autostart_set(TRUE); /* cap nhat duong dan neu exe da bi chuyen cho khac */
 
-    pick_gpu();
-    init_gpu_temp();
-    init_disk();
-    init_pdh();
-    gpu_query_update();
-    sample();
+    InitializeCriticalSection(&csStats);
+    msgTaskbarCreated = RegisterWindowMessageW(L"TaskbarCreated");
 
     ZeroMemory(&wc, sizeof wc);
     wc.lpfnWndProc = wndproc;
@@ -889,12 +1125,15 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE prev, PWSTR cmd, int show)
     wc.lpszClassName = APPNAME;
     RegisterClassW(&wc);
 
-    hwnd = CreateWindowExW(WS_EX_LAYERED | WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE,
-                           APPNAME, APPNAME, WS_POPUP, 0, 0, winW, 40, NULL, NULL, inst, NULL);
+    hInst = inst;
+    /* cua so an: khong hien, chi de giu timer / menu / nhan thong bao he thong */
+    hwnd = CreateWindowExW(WS_EX_TOOLWINDOW, APPNAME, APPNAME, WS_POPUP, 0, 0, 0, 0, NULL, NULL, inst, NULL);
     if (!hwnd) return 1;
 
     SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, NULL, on_foreground, 0, 0,
                     WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS);
+    hStop = CreateEventW(NULL, TRUE, FALSE, NULL);
+    hSensor = CreateThread(NULL, 0, sensor_thread, NULL, 0, NULL);
     SetTimer(hwnd, 1, 1000, NULL);
     update_window();
 
@@ -903,9 +1142,9 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE prev, PWSTR cmd, int show)
         DispatchMessageW(&msg);
     }
 
-    if (hq) PdhCloseQuery(hq);
-    if (hqGpu) PdhCloseQuery(hqGpu);
-    if (hDisk != INVALID_HANDLE_VALUE) CloseHandle(hDisk);
+    /* bao luong cam bien dung; cho toi da 2 giay, treo thi de Windows don khi thoat process */
+    if (hStop) SetEvent(hStop);
+    if (hSensor) { WaitForSingleObject(hSensor, 2000); CloseHandle(hSensor); }
     if (mtx) CloseHandle(mtx);
     return 0;
 }

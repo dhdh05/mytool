@@ -1,0 +1,2 @@
+/* Nhung manifest vao exe: 1 = CREATEPROCESS_MANIFEST_RESOURCE_ID, 24 = RT_MANIFEST */
+1 24 "taskbarstats.manifest"
