@@ -16,6 +16,8 @@ Viết bằng C thuần + Win32 API, không cần thư viện ngoài, không c�
 - **Nhiều màn hình**: hiện trên taskbar của mọi màn (cần bật *Settings → Personalization → Taskbar → Taskbar behaviors → Show my taskbar on all displays*). Cắm / rút màn là tự hiện / tự ẩn
 - Không bị che khi mở Start, Search (Win+Q), Notification Center
 
+![TaskbarStats trên 2 màn hình](screenshot_2_monitors.png)
+
 ## Cách dùng
 1. Chạy `TaskbarStats.exe` (không cần cài).
    Lần đầu Windows SmartScreen có thể chặn vì file không có chữ ký số → **More info → Run anyway**.
