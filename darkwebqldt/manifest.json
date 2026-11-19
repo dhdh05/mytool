@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "BKHN DarkMode",
+  "version": "2.0.0",
+  "description": "Dark mode cho QLDT HUST (qldt.hust.edu.vn)",
+  "author": "dhdh05",
+  "homepage_url": "https://github.com/dhdh05/mytool/tree/main/darkwebqldt",
+  "content_scripts": [
+    {
+      "matches": ["https://qldt.hust.edu.vn/*"],
+      "css": ["dark.css"],
+      "js": ["bkhn-dark.js"],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ]
+}
