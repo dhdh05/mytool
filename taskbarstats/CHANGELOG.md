@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.2
+
+### Tính năng mới
+- **Thiết bị đang kết nối** (menu chuột phải): danh sách màn hình kèm cổng (HDMI / DisplayPort / USB-C / VGA / DVI / DisplayLink), thiết bị USB cắm ngoài kèm nhãn cổng **Type-C / USB-A**, hiển thị dạng cây khi đi qua USB hub.
+- Chỉ quét khi mở menu: lúc chạy bình thường không tốn thêm RAM / CPU, không thêm thư viện liên kết.
+- **Dung lượng SSD** gộp vào ô SSD: `SSD  30°C  178/967G` (cộng mọi phân vùng trên ổ chứa Windows). Menu *Ổ SSD ›*: Nhiệt độ / Dung lượng / Hiện cả ổ gắn ngoài. Ổ gắn ngoài tắt sẵn; bật thì mỗi ổ 1 ô (`USB  29/64G`). Số đổi vàng khi ổ đầy ≥ 85%, đỏ ≥ 95%. Đọc 10 giây một lần và chỉ khi đang bật.
+
+### Sửa lỗi
+- **VRAM luôn 0% / 0.0G trên máy chỉ có GPU tích hợp** (Intel Iris Xe, UHD, AMD Radeon Graphics): các GPU này không có VRAM riêng mà dùng chung RAM máy. Giờ app tự nhận ra (VRAM riêng < 512 MB) và đổi ô VRAM thành **GPU RAM**, đo bộ nhớ GPU dùng chung giống Task Manager.
+
 ## v1.1
 
 ### Sửa lỗi
